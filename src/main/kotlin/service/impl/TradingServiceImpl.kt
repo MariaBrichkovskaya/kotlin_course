@@ -20,7 +20,6 @@ import kotlin.random.Random
 import kotlin.random.nextInt
 
 class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingService {
-    //val exchanges = mutableSetOf<Exchange>()
     override fun trade(
         sender: Wallet,
         receiver: Wallet,
