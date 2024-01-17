@@ -12,6 +12,14 @@ open class Transaction(
     val amount: BigDecimal
 ) {
     val id: UUID = UUID.randomUUID()
-    val date: LocalDateTime = LocalDateTime.now()
+    var date: LocalDateTime = LocalDateTime.now()
+
+    constructor(sender: Wallet, fromCurrency: Currency, amount: BigDecimal, date: LocalDateTime) : this(
+        sender,
+        fromCurrency,
+        amount
+    ) {
+        this.date = date
+    }
 }
 

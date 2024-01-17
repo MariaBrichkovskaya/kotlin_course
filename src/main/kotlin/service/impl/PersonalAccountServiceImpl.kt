@@ -30,10 +30,10 @@ class PersonalAccountServiceImpl : PersonalAccountService {
     ): List<Transaction> {
         return exchange.transactionHistory
             .filter { transaction -> transaction.date.isAfter(from) && transaction.date.isBefore(to) }
-            .filter { transaction -> transaction.sender.id == user.id }
+            .filter { transaction -> transaction.sender.user.id == user.id }
     }
 
     override fun addWallet(user: User, wallet: Wallet) {
-        user.wallets.add(wallet)
+        user.wallets = mutableSetOf(wallet)
     }
 }
