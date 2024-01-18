@@ -20,6 +20,15 @@ import kotlin.random.Random
 import kotlin.random.nextInt
 
 class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingService {
+    companion object {
+        private const val PASSPHRASE_MISMATCH_MESSAGE = "Passphrases are not equals"
+        private const val INVALID_USER_STATUS_MESSAGE = "User status is %s"
+        private const val NO_SUCH_CURRENCY_MESSAGE = "No such currency in wallet"
+        private const val NOT_ENOUGH_MONEY_MESSAGE = "Not enough money on your balance"
+        private const val TRANSACTION_FAILED_MESSAGE = "Transaction failed"
+        private const val NO_SUITABLE_EXCHANGE_MESSAGE = "No suitable exchange"
+    }
+
     override fun trade(
         sender: Wallet,
         receiver: Wallet,
@@ -97,8 +106,8 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
             receiver.currencies[toCurrency] = receiver.currencies
                 .getValue(toCurrency)
                 .add(
-                    exchange.exchangeRates[fromCurrency to toCurrency]?.multiply(amount)
-                        ?: throw NoSuitableExchangeException("No suitable exchange")
+                    amount.divide(exchange.exchangeRates[fromCurrency to toCurrency])
+                        ?: throw NoSuitableExchangeException(NO_SUITABLE_EXCHANGE_MESSAGE)
                 )
         } catch (e: NoSuchElementException) {
             receiver.currencies += toCurrency to amount
@@ -107,30 +116,32 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
 
     private fun checkPassPhrase(passphrase: String, wallet: Wallet) {
         if (passphrase != wallet.passphrase)
-            throw PassphraseMismatchException("Passphrases are not equals")
+            throw PassphraseMismatchException(PASSPHRASE_MISMATCH_MESSAGE)
     }
 
     private fun checkUserStatus(user: User) {
         if (user.status == Status.NEW || user.status == Status.BLOCKED)
-            throw InvalidUserStatusException("User status is ${user.status}")
+            throw InvalidUserStatusException(String.format(INVALID_USER_STATUS_MESSAGE, user.status))
     }
 
     private fun checkBalance(wallet: Wallet, currency: Currency, amount: BigDecimal) {
         val balance: BigDecimal
+
         try {
             balance = wallet.currencies.getValue(currency)
         } catch (e: NoSuchElementException) {
-            throw NoSuchCurrencyException("No such currency in wallet")
+            throw NoSuchCurrencyException(NO_SUCH_CURRENCY_MESSAGE)
         }
+
         if (balance < amount) {
-            throw BalanceException("Not Enough money on your balance")
+            throw BalanceException(NOT_ENOUGH_MONEY_MESSAGE)
         }
     }
 
     private fun checkRandom() {
         val num = Random.nextInt(0..51)
         if (num in 27..50)
-            throw TransactionFailedException("Transaction failed")
+            throw TransactionFailedException(TRANSACTION_FAILED_MESSAGE)
 
     }
 }

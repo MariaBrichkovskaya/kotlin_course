@@ -2,18 +2,17 @@ package service.impl
 
 import enums.Currency
 import enums.Status
+import exception.BalanceException
 import exception.InvalidUserStatusException
+import exception.NoSuchCurrencyException
+import exception.PassphraseMismatchException
 import exchange.Exchange
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 import user.User
 import wallet.Wallet
 import java.math.BigDecimal
-import kotlin.random.Random
 import kotlin.test.assertEquals
 
 class TradingServiceImplTest {
@@ -30,14 +29,14 @@ class TradingServiceImplTest {
     @BeforeEach
     fun setUp() {
         tradingService = TradingServiceImpl(mutableSetOf(exchange))
-        senderWallet.currencies += Currency.LITECOIN to BigDecimal("100")
-        exchange.exchangeRates += (fromCurrency to toCurrency) to BigDecimal("5")
+        senderWallet.currencies += Currency.LITECOIN to BigDecimal(100)
+        exchange.exchangeRates += (fromCurrency to toCurrency) to BigDecimal(5)
+        exchange.exchangeRates += (Currency.ETHEREUM to toCurrency) to BigDecimal(2)
     }
 
     @Test
     fun trade_shouldPerformTradeTransactionAndAddToTransactionHistory() {
-        val amount = BigDecimal("100")
-
+        val amount = BigDecimal(100)
         val transaction = tradingService.trade(senderWallet, receiverWallet, fromCurrency, amount, toCurrency, exchange)
         assert(exchange.transactionHistory.contains(transaction))
     }
@@ -45,10 +44,8 @@ class TradingServiceImplTest {
     @Test
     fun swap_shouldPerformSwapTransactionAndAddToTransactionHistory() {
         val amount = BigDecimal("100")
-        val mockRandom = mock(Random::class.java)
-
-        `when`(mockRandom.nextInt(anyInt(), anyInt())).thenReturn(24)
-        val transaction = tradingService.swap(senderWallet, "passphrase", fromCurrency, amount, toCurrency, exchange)
+        val transaction =
+            tradingService.swap(senderWallet, senderWallet.passphrase, fromCurrency, amount, toCurrency, exchange)
         assert(exchange.transactionHistory.contains(transaction))
     }
 
@@ -68,10 +65,50 @@ class TradingServiceImplTest {
     @Test
     fun trade_shouldThrowInvalidUserStatusExceptionIfSenderStatusIsNew() {
         senderUser.status = Status.NEW
-
         assertThrows<InvalidUserStatusException> {
-            tradingService.trade(senderWallet, receiverWallet, fromCurrency, BigDecimal("100"), toCurrency, exchange)
+            tradingService.trade(senderWallet, receiverWallet, fromCurrency, BigDecimal(100), toCurrency, exchange)
         }
     }
 
+    @Test
+    fun trade_shouldThrowBalanceException_whenSenderBalanceLessThanAmount() {
+        assertThrows<BalanceException> {
+            tradingService.trade(senderWallet, receiverWallet, fromCurrency, BigDecimal(1000), toCurrency, exchange)
+        }
+    }
+
+    @Test
+    fun swap_shouldThrowPassphraseException_whenPassphrasesMismatched() {
+        assertThrows<PassphraseMismatchException> {
+            tradingService.swap(senderWallet, "123", fromCurrency, BigDecimal(100), toCurrency, exchange)
+        }
+    }
+
+    @Test
+    fun swapTransaction_shouldReturnNoSuchCurrencyException_whenNoSuchCurrencyInWallet() {
+        assertThrows<NoSuchCurrencyException> {
+            tradingService.swap(
+                senderWallet,
+                senderWallet.passphrase,
+                Currency.ETHEREUM,
+                BigDecimal(100),
+                toCurrency,
+                exchange
+            )
+        }
+    }
+
+    @Test
+    fun swapTransaction_shouldReturnNoSuitableExchangeException_whenNoSuitableExchange() {
+        assertThrows<NoSuchCurrencyException> {
+            tradingService.swap(
+                senderWallet,
+                senderWallet.passphrase,
+                Currency.ETHEREUM,
+                BigDecimal(100),
+                Currency.BITCOIN,
+                exchange
+            )
+        }
+    }
 }

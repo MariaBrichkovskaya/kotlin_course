@@ -10,16 +10,19 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 
 class PersonalAccountServiceImpl : PersonalAccountService {
-    override fun printBalance(vararg wallets: Wallet) {
+    override fun getBalance(vararg wallets: Wallet): MutableMap<Currency, BigDecimal> {
         val totalBalance = mutableMapOf<Currency, BigDecimal>()
         for (wallet in wallets) {
             for ((currency, amount) in wallet.currencies) {
                 totalBalance[currency] = totalBalance.getOrDefault(currency, BigDecimal.ZERO) + amount
             }
         }
+
         for ((currency, amount) in totalBalance) {
-            println("Currency: $currency balance: $amount ")
+            totalBalance += currency to amount
         }
+
+        return totalBalance
     }
 
     override fun getTransactionsForPeriod(
