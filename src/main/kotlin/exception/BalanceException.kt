@@ -1,4 +1,3 @@
 package exception
 
-class BalanceException(message: String?) : RuntimeException(message) {
-}
+class BalanceException(message: String?) : RuntimeException(message)

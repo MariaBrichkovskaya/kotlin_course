@@ -11,6 +11,4 @@ class TradeTransaction(
     amount: BigDecimal,
     val receiver: Wallet,
     toCurrency: Currency,
-) : Transaction(sender, fromCurrency, amount) {
-
-}
+) : Transaction(sender, fromCurrency, amount)

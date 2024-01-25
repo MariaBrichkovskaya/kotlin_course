@@ -11,6 +11,4 @@ class SwapTransaction(
     fromCurrency: Currency,
     amount: BigDecimal,
     val toCurrency: Currency
-) : Transaction(sender, fromCurrency, amount) {
-
-}
+) : Transaction(sender, fromCurrency, amount)

@@ -1,4 +1,3 @@
 package exception
 
-class PassphraseMismatchException(message: String?) : RuntimeException(message) {
-}
+class PassphraseMismatchException(message: String?) : RuntimeException(message)

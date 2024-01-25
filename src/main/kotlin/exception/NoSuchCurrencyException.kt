@@ -1,4 +1,3 @@
 package exception
 
-class NoSuchCurrencyException(message: String?) : RuntimeException(message) {
-}
+class NoSuchCurrencyException(message: String?) : RuntimeException(message)

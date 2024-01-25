@@ -121,7 +121,7 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
 
     private fun checkUserStatus(user: User) {
         if (user.status == Status.NEW || user.status == Status.BLOCKED)
-            throw InvalidUserStatusException(String.format(INVALID_USER_STATUS_MESSAGE, user.status))
+            throw InvalidUserStatusException(INVALID_USER_STATUS_MESSAGE.format(user.status))
     }
 
     private fun checkBalance(wallet: Wallet, currency: Currency, amount: BigDecimal) {
