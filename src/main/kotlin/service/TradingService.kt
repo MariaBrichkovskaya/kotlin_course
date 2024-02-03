@@ -3,6 +3,7 @@ package service
 import enums.Currency
 import exchange.Exchange
 import transaction.Transaction
+import user.User
 import wallet.Wallet
 import java.math.BigDecimal
 
@@ -27,4 +28,7 @@ interface TradingService {
     ): Transaction
 
     fun getAllExchanges(): Set<Exchange>
+    fun sealed(transaction: Transaction): Wallet
+    fun getFilteredUsers(users: List<User>): List<User>
+    fun fibonacci(n: Int): Long
 }

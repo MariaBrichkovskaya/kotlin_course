@@ -10,10 +10,11 @@ import exception.PassphraseMismatchException
 import exception.TransactionFailedException
 import exchange.Exchange
 import service.TradingService
+import transaction.SwapTransaction
+import transaction.TradeTransaction
 import transaction.Transaction
-import transaction.castom.SwapTransaction
-import transaction.castom.TradeTransaction
 import user.User
+import user.walletsAmount
 import wallet.Wallet
 import java.math.BigDecimal
 import kotlin.random.Random
@@ -139,9 +140,34 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
     }
 
     private fun checkRandom() {
-        val num = Random.nextInt(0..51)
+        val num = Random.nextInt(createRange())
         if (num in 27..50)
             throw TransactionFailedException(TRANSACTION_FAILED_MESSAGE)
 
+    }
+
+    private fun createRange(
+        min: Int = 0,
+        max: Int = 51
+    ): IntRange {
+        return min..max
+    }
+
+    override fun sealed(transaction: Transaction) =
+        when (transaction) {
+            is SwapTransaction -> transaction.sender
+            is TradeTransaction -> transaction.receiver
+        }
+
+    override fun getFilteredUsers(users: List<User>): List<User> {
+        return users.filter { it.walletsAmount > 2 }
+    }
+
+    override fun fibonacci(n: Int): Long {
+        tailrec fun fibonacci(a: Long, b: Long, count: Int): Long {
+            return if (count == 0) a
+            else fibonacci(b, a + b, count - 1)
+        }
+        return fibonacci(0, 1, n)
     }
 }

@@ -10,25 +10,33 @@ import exchange.Exchange
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import transaction.SwapTransaction
+import transaction.TradeTransaction
 import user.User
 import wallet.Wallet
 import java.math.BigDecimal
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class TradingServiceImplTest {
     private lateinit var tradingService: TradingServiceImpl
     private val senderUser = User("sender@example.com", "Sender", Status.APPROVED)
     private val receiverUser = User("receiver@example.com", "Receiver", Status.APPROVED)
     private val senderWallet = Wallet("Sender", "passphrase", senderUser)
+    private val secondSenderWallet = Wallet("qwerty", "qwerty", senderUser)
+    private val thirdSenderWallet = Wallet("qwerty", "qwerty", senderUser)
     private val receiverWallet = Wallet("Receiver", "passphrase", receiverUser)
     private val exchange = Exchange("TestExchange")
     private val fromCurrency = Currency.LITECOIN
     private val toCurrency = Currency.BITCOIN
+    private val firstImplementation = FirstImplementation()
+    private val secondImplementation = SecondImplementation()
 
 
     @BeforeEach
     fun setUp() {
         tradingService = TradingServiceImpl(mutableSetOf(exchange))
+        senderUser.wallets = mutableSetOf(senderWallet, secondSenderWallet, thirdSenderWallet)
         senderWallet.currencies += Currency.LITECOIN to BigDecimal(100)
         exchange.exchangeRates += (fromCurrency to toCurrency) to BigDecimal(5)
         exchange.exchangeRates += (Currency.ETHEREUM to toCurrency) to BigDecimal(2)
@@ -111,4 +119,54 @@ class TradingServiceImplTest {
             )
         }
     }
+
+    @Test
+    fun `swap currencies in exchange rates`() {
+        exchange.swapAllCurrencies()
+        assertEquals(BigDecimal(5), exchange.exchangeRates[toCurrency to fromCurrency])
+        assertEquals(BigDecimal(2), exchange.exchangeRates[toCurrency to Currency.ETHEREUM])
+    }
+
+    @Test
+    fun `test delegates when first and third methods should be similar, second should be different`() {
+        assertEquals(firstImplementation.first(), secondImplementation.first())
+        assertEquals(firstImplementation.third(), secondImplementation.third())
+        assertNotEquals(firstImplementation.second(), secondImplementation.second())
+    }
+
+    @Test
+    fun `test sealed function with SwapTransaction`() {
+        val transaction = SwapTransaction(
+            senderWallet,
+            fromCurrency,
+            BigDecimal(10),
+            toCurrency
+        )
+        assertEquals(senderWallet, tradingService.sealed(transaction))
+    }
+
+    @Test
+    fun `test sealed function with TradeTransaction`() {
+        val transaction = TradeTransaction(
+            senderWallet,
+            fromCurrency,
+            BigDecimal(10),
+            receiverWallet,
+            toCurrency
+        )
+        assertEquals(receiverWallet, tradingService.sealed(transaction))
+    }
+
+
+    @Test
+    fun `test getFilteredUsers with user with walletsAmount more than 2`() {
+        val users = listOf(senderUser, receiverUser)
+        assertEquals(1, tradingService.getFilteredUsers(users).size)
+    }
+
+    @Test
+    fun `test fibonacci with n = 50`() {
+        assertEquals(12586269025, tradingService.fibonacci(50))
+    }
+
 }

@@ -1,6 +1,7 @@
 package service.impl
 
 import enums.Currency
+import enums.Status
 import exchange.Exchange
 import service.PersonalAccountService
 import transaction.Transaction
@@ -8,8 +9,10 @@ import user.User
 import wallet.Wallet
 import java.math.BigDecimal
 import java.time.LocalDateTime
+import java.util.Locale
+import java.util.UUID
 
-class PersonalAccountServiceImpl : PersonalAccountService {
+object PersonalAccountServiceImpl : PersonalAccountService {
     override fun getBalance(vararg wallets: Wallet): MutableMap<Currency, BigDecimal> {
         val totalBalance = mutableMapOf<Currency, BigDecimal>()
         for (wallet in wallets) {
@@ -38,5 +41,24 @@ class PersonalAccountServiceImpl : PersonalAccountService {
 
     override fun addWallet(user: User, wallet: Wallet) {
         user.wallets = mutableSetOf(wallet)
+    }
+
+    override fun creatMapsFromList(users: List<User>) {
+        val firstMap: Map<UUID, User> = users.associateBy { it.id }
+        val secondMap: Map<User, Status> = users.associateWith { it.status }
+
+        println(firstMap)
+        println(secondMap)
+    }
+
+    override fun destructurization(user: User): String {
+        val (id, _, _, status) = user
+        return "user with id $id have status $status"
+    }
+
+    override fun getEmailInUpperCaseAndWithoutDomain(user: User): User {
+        val newEmail = user.email?.substringBefore('@')?.uppercase(Locale.getDefault()) ?: ""
+        user.email = newEmail
+        return user
     }
 }

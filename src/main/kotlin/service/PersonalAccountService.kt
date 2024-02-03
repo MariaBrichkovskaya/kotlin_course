@@ -18,4 +18,7 @@ interface PersonalAccountService {
     ): List<Transaction>
 
     fun addWallet(user: User, wallet: Wallet)
+    fun creatMapsFromList(users: List<User>)
+    fun destructurization(user: User): String
+    fun getEmailInUpperCaseAndWithoutDomain(user: User): User
 }
