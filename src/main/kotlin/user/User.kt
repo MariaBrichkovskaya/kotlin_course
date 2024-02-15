@@ -15,11 +15,11 @@ data class User(val id: UUID, var email: String?, var fullName: String, var stat
         }
 
     init {
-        val wallet = Wallet("qwerty", "qwerty", this)
-        wallet.currencies += mapOf(Currency.BITCOIN to BigDecimal.TEN)
-        wallets = mutableSetOf(wallet)
+        Wallet("qwerty", "qwerty", this).let { wallet ->
+            wallet.currencies += mapOf(Currency.BITCOIN to BigDecimal.TEN)
+            wallets = mutableSetOf(wallet)
+        }
     }
-
 
     constructor(email: String, fullName: String) : this(
         UUID.randomUUID(),
