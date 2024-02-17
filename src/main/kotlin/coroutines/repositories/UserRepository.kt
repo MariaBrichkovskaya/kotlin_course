@@ -1,7 +1,10 @@
 package coroutines.repositories
 
+import coroutines.obsercable.CoroutineObserver
+import enums.Status
 import kotlinx.coroutines.delay
 import user.User
+import wallet.Wallet
 import kotlin.random.Random
 
 class UserRepository {
@@ -30,5 +33,20 @@ class UserRepository {
         return user
     }
 
+    private val userObservers = mutableListOf<CoroutineObserver>()
 
+
+    fun addObserver(observer: CoroutineObserver) {
+        userObservers.add(observer)
+    }
+
+
+    private fun notifyObservers(wallet: Wallet) {
+        userObservers.forEach { it.notify(wallet.user) }
+    }
+
+    fun changeUserStatus(wallet: Wallet) {
+        wallet.user.status = Status.APPROVED
+        notifyObservers(wallet)
+    }
 }
