@@ -88,9 +88,7 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
     }
 
 
-    override fun getAllExchanges(): Set<Exchange> {
-        return exchanges
-    }
+    override fun getAllExchanges(): Set<Exchange> = exchanges
 
     private fun changeCurrency(
         exchange: Exchange,
@@ -116,8 +114,9 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
     }
 
     private fun checkPassPhrase(passphrase: String, wallet: Wallet) {
-        if (passphrase != wallet.passphrase)
+        require(passphrase == wallet.passphrase) {
             throw PassphraseMismatchException(PASSPHRASE_MISMATCH_MESSAGE)
+        }
     }
 
     private fun checkUserStatus(user: User) {
@@ -134,24 +133,24 @@ class TradingServiceImpl(private val exchanges: MutableSet<Exchange>) : TradingS
             throw NoSuchCurrencyException(NO_SUCH_CURRENCY_MESSAGE)
         }
 
-        if (balance < amount) {
+        require(balance > amount) {
             throw BalanceException(NOT_ENOUGH_MONEY_MESSAGE)
         }
     }
 
     private fun checkRandom() {
         val num = Random.nextInt(createRange())
-        if (num in 27..50)
+        require(num in 1..25)
+        {
             throw TransactionFailedException(TRANSACTION_FAILED_MESSAGE)
+        }
 
     }
 
     private fun createRange(
         min: Int = 0,
         max: Int = 51
-    ): IntRange {
-        return min..max
-    }
+    ): IntRange = min..max
 
     override fun sealed(transaction: Transaction) =
         when (transaction) {

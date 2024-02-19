@@ -1,5 +1,6 @@
 package service.impl
 
+import config.ApplicationDependencies
 import enums.Currency
 import enums.Status
 import exception.BalanceException
@@ -10,6 +11,8 @@ import exchange.Exchange
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.Mockito.mock
+import org.mockito.kotlin.verify
 import transaction.SwapTransaction
 import transaction.TradeTransaction
 import user.User
@@ -44,14 +47,14 @@ class TradingServiceImplTest {
 
     @Test
     fun trade_shouldPerformTradeTransactionAndAddToTransactionHistory() {
-        val amount = BigDecimal(100)
+        val amount = BigDecimal(1)
         val transaction = tradingService.trade(senderWallet, receiverWallet, fromCurrency, amount, toCurrency, exchange)
         assert(exchange.transactionHistory.contains(transaction))
     }
 
     @Test
     fun swap_shouldPerformSwapTransactionAndAddToTransactionHistory() {
-        val amount = BigDecimal("100")
+        val amount = BigDecimal(1)
         val transaction =
             tradingService.swap(senderWallet, senderWallet.passphrase, fromCurrency, amount, toCurrency, exchange)
         assert(exchange.transactionHistory.contains(transaction))
@@ -88,7 +91,14 @@ class TradingServiceImplTest {
     @Test
     fun swap_shouldThrowPassphraseException_whenPassphrasesMismatched() {
         assertThrows<PassphraseMismatchException> {
-            tradingService.swap(senderWallet, "123", fromCurrency, BigDecimal(100), toCurrency, exchange)
+            tradingService.swap(senderWallet, "123", fromCurrency, BigDecimal(1), toCurrency, exchange)
+        }
+    }
+
+    @Test
+    fun swap_shouldThrowBalanceException_whenNotEnoughMoney() {
+        assertThrows<BalanceException> {
+            tradingService.swap(senderWallet, "passphrase", fromCurrency, BigDecimal(1000), toCurrency, exchange)
         }
     }
 
@@ -129,9 +139,21 @@ class TradingServiceImplTest {
 
     @Test
     fun `test delegates when first and third methods should be similar, second should be different`() {
+
         assertEquals(firstImplementation.first(), secondImplementation.first())
         assertEquals(firstImplementation.third(), secondImplementation.third())
         assertNotEquals(firstImplementation.second(), secondImplementation.second())
+    }
+
+    @Test
+    fun testUseMethodForAutoClosable() {
+        val dependencies = mock<SecondImplementation>()
+
+        dependencies.use {
+            println(it.first())
+        }
+
+        verify(dependencies).close()
     }
 
     @Test
@@ -167,6 +189,32 @@ class TradingServiceImplTest {
     @Test
     fun `test fibonacci with n = 50`() {
         assertEquals(12586269025, tradingService.fibonacci(50))
+    }
+
+    @Test
+    fun testExtensionLambda() {
+        val appDependencies = ApplicationDependencies {
+            initConfig {
+                property1 = "Hello"
+                property2 = "world"
+            }
+        }
+        assertEquals(appDependencies.printConfigProperties(), "Hello, world")
+    }
+
+    @Test
+    fun testIsInitialized() {
+        val appDependencies = ApplicationDependencies {
+            initConfig {
+                property1 = "Hello"
+            }
+        }
+        assertEquals(appDependencies.printConfigProperties(), "Hello, Property2 is not initialized")
+    }
+
+    @Test
+    fun `test Property Delegation`() {
+        assertEquals(exchange.description, "This is exchange with name ${exchange.name}")
     }
 
 }
